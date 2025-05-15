@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URL Santa</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 text-gray-800 min-h-screen transition-colors duration-300 dark:bg-gray-900 dark:text-gray-100">
+    <!-- Toggle Button -->
+    <div class="absolute top-4 right-4">
+        <button id="theme-toggle" class="p-2 bg-blue-600 text-white rounded-full">
+            🌙
+        </button>
+    </div>
+
+    <!-- Main Container -->
+    <div class="flex items-center justify-center min-h-screen px-4">
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg max-w-md w-full">
+            <h1 class="text-3xl font-bold text-center text-blue-600 dark:text-blue-400 mb-4">URL Santa</h1>
+            <p class="text-center text-gray-600 dark:text-gray-400 mb-4">Check if a URL is valid and safe</p>
+
+            <form action="/check" method="get" class="space-y-4">
+                <div>
+                    <label for="url" class="block font-medium mb-1 dark:text-gray-200">Enter URL:</label>
+                    <input type="text" id="url" name="url" required
+                           class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                </div>
+                <button type="submit"
+                        class="w-full bg-blue-600 text-white py-2 rounded-md font-semibold hover:bg-blue-700 transition">
+                    Check URL
+                </button>
+            </form>
+
+            <!-- Result -->
+            {% if result %}
+                <div class="mt-6 text-center">
+                    <p class="text-lg font-semibold">{{ result }}</p>
+                </div>
+            {% endif %}
+
+            <!-- Recent Checks -->
+            {% if recent %}
+                <div class="mt-6">
+                    <h2 class="text-md font-semibold mb-2 text-center text-gray-600 dark:text-gray-300">Recent Checks</h2>
+                    <ul class="text-center space-y-1">
+                        {% for item in recent %}
+                            <li class="text-sm text-gray-700 dark:text-gray-200">{{ item }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Theme Toggle Script -->
+    <script>
+        const toggleButton = document.getElementById("theme-toggle");
+        const body = document.body;
+
+        toggleButton.addEventListener("click", () => {
+            body.classList.toggle("dark");
+            toggleButton.textContent = body.classList.contains("dark") ? "☀️" : "🌙";
+        });
+    </script>
+</body>
+</html>
