@@ -2,3 +2,6 @@ fastapi
 uvicorn
 requests
 jinja2
+validators
+qrcode[pil]
+python-multipart
