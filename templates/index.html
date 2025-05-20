@@ -1,74 +1,114 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="transition-colors duration-500">
 
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>URL Santa</title>
 
-  <script>
-    tailwind = { darkMode: 'class' }
-  </script>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+    }
+  </script>
+  <style>
+    @keyframes fadeInUp {
+      0% {
+        opacity: 0;
+        transform: translateY(40px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .animate-fade-in-up {
+      animation: fadeInUp 0.7s ease-out forwards;
+    }
+  </style>
 </head>
 
-<body class="bg-gray-100 font-sans dark:bg-gray-900 dark:text-gray-200">
+<body class="bg-gradient-to-br from-blue-50 to-purple-100 dark:from-gray-900 dark:to-gray-800 text-gray-800 dark:text-gray-100 transition-colors duration-500">
 
-  <!-- Dark Mode Toggle -->
+  <!-- Theme Toggle Button -->
   <div class="absolute top-4 right-4">
-    <button id="theme-toggle" class="p-2 bg-blue-600 text-white rounded-full">🌙</button>
+    <button id="theme-toggle" class="p-2 rounded-full text-xl shadow bg-indigo-500 text-white hover:bg-indigo-600 transition">
+      🌙
+    </button>
   </div>
 
-  <div class="min-h-screen flex flex-col items-center justify-center space-y-6 p-4">
+  <div class="flex flex-col items-center justify-center min-h-screen p-4">
     <div
-      class="bg-white p-8 rounded-lg shadow-lg max-w-md w-full dark:bg-gray-800 dark:text-gray-100 transition-colors duration-300">
-      <h1 class="text-3xl font-bold text-center text-blue-600 mb-4 dark:text-blue-400">URL Santa</h1>
-      <p class="text-center text-gray-600 mb-6 dark:text-gray-400">Check if a URL is valid and safe</p>
+      class="bg-white dark:bg-gray-900 rounded-2xl shadow-xl p-10 w-full max-w-md transform transition-all animate-fade-in-up"
+    >
+      <h1 class="text-4xl font-bold text-center text-indigo-600 dark:text-indigo-400 mb-4 tracking-tight">URL Santa</h1>
+      <p class="text-center text-gray-600 dark:text-gray-400 mb-6">Check if a URL is valid and safe</p>
 
       <form id="url-form" class="space-y-4">
-        <label for="url" class="block font-medium">Enter URL:</label>
+        <label for="url" class="block text-sm font-medium">Enter URL:</label>
         <input type="text" id="url" name="url" required
-          class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:focus:ring-blue-500"
+          class="w-full p-3 rounded-xl border border-gray-300 dark:border-gray-700 dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-400 transition"
           placeholder="https://example.com" />
 
         <button type="submit"
-          class="w-full py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-blue-500 dark:hover:bg-blue-600">
-          Check URL
+          class="w-full py-3 bg-indigo-500 text-white rounded-xl font-semibold hover:bg-indigo-600 transition duration-200 shadow-md hover:shadow-lg">
+          🚀 Check URL
         </button>
       </form>
 
-      <div id="result" class="mt-6 text-center text-lg"></div>
+      <div id="result" class="mt-6 text-center text-lg font-medium"></div>
 
-      <!-- QR Code Display -->
       <div id="qr-container" class="mt-6 flex justify-center hidden">
         <canvas id="qr-code"></canvas>
       </div>
 
       <div id="download-container" class="mt-4 text-center hidden">
         <button id="download-btn"
-          class="py-2 px-4 bg-green-600 text-white rounded hover:bg-green-700 focus:outline-none">Download QR Code</button>
+          class="py-2 px-4 bg-green-500 text-white rounded-xl hover:bg-green-600 transition">
+          ⬇️ Download QR Code
+        </button>
       </div>
     </div>
   </div>
 
-  <!-- QRCode.js from CDN -->
   <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
 
   <script>
+    // Theme toggle logic
     const themeToggle = document.getElementById('theme-toggle');
     const html = document.documentElement;
 
-    if (html.classList.contains('dark')) {
-      themeToggle.textContent = '☀️';
-    } else {
-      themeToggle.textContent = '🌙';
+    function setTheme(mode) {
+      if (mode === 'dark') {
+        html.classList.add('dark');
+        themeToggle.textContent = '☀️';
+        localStorage.setItem('theme', 'dark');
+      } else {
+        html.classList.remove('dark');
+        themeToggle.textContent = '🌙';
+        localStorage.setItem('theme', 'light');
+      }
     }
 
+    // Load saved theme
+    const savedTheme = localStorage.getItem('theme');
+
+    if (savedTheme === 'dark') {
+      setTheme('dark');
+    } else {
+      setTheme('light'); // default to light theme always on first visit
+}
+
+
+    // Toggle on click
     themeToggle.addEventListener('click', () => {
-      html.classList.toggle('dark');
-      themeToggle.textContent = html.classList.contains('dark') ? '☀️' : '🌙';
+      const isDark = html.classList.contains('dark');
+      setTheme(isDark ? 'light' : 'dark');
     });
 
+    // URL checking logic
     const form = document.getElementById('url-form');
     const urlInput = document.getElementById('url');
     const resultDiv = document.getElementById('result');
@@ -80,7 +120,7 @@
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       const url = urlInput.value.trim();
-      resultDiv.textContent = 'Checking...';
+      resultDiv.textContent = '⏳ Checking...';
       qrContainer.classList.add('hidden');
       downloadContainer.classList.add('hidden');
 
@@ -93,21 +133,13 @@
           resultDiv.textContent = '✅ URL is valid and safe!';
           qrContainer.classList.remove('hidden');
           downloadContainer.classList.remove('hidden');
-
-          QRCode.toCanvas(qrCanvas, url, { width: 180 }, (error) => {
-            if (error) {
-              console.error(error);
-              resultDiv.textContent = 'Error generating QR code.';
-              qrContainer.classList.add('hidden');
-              downloadContainer.classList.add('hidden');
-            }
-          });
+          QRCode.toCanvas(qrCanvas, url, { width: 180 });
         } else {
-          resultDiv.textContent = '❌ Invalid URL. Please enter a correct URL.';
+          resultDiv.textContent = '❌ Invalid URL. Please enter a correct one.';
         }
-      } catch (error) {
-        console.error(error);
-        resultDiv.textContent = 'Error checking URL. Please try again.';
+      } catch (err) {
+        resultDiv.textContent = '⚠️ Error checking URL. Please try again.';
+        console.error(err);
       }
     });
 
