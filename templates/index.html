@@ -55,10 +55,16 @@
       grid-template-columns: repeat(2, 1fr);
       gap: 0.5rem;
     }
+
+    /* Dark mode specific styles */
+    .dark .spinner {
+      border-color: rgba(255, 255, 255, 0.1);
+      border-top-color: #60A5FA;
+    }
   </style>
 </head>
 
-<body class="bg-gradient-to-br from-blue-50 to-purple-100 dark:from-gray-900 dark:to-gray-800 text-gray-800 dark:text-gray-100 transition-colors duration-500">
+<body class="bg-gradient-to-r from-pink-200 via-purple-300 to-indigo-400 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 text-gray-800 dark:text-gray-100 transition-colors duration-500">
 
   <!-- Theme Toggle Button -->
   <div class="absolute top-4 right-4">
@@ -69,15 +75,15 @@
 
   <div class="flex flex-col items-center justify-center min-h-screen p-4">
     <div
-      class="bg-white dark:bg-gray-900 rounded-2xl shadow-xl p-10 w-full max-w-md transform transition-all animate-fade-in-up hover-scale"
+      class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-10 w-full max-w-md transform transition-all animate-fade-in-up hover-scale"
     >
       <h1 class="text-4xl font-bold text-center text-indigo-600 dark:text-indigo-400 mb-4 tracking-tight">URL Santa</h1>
-      <p class="text-center text-gray-600 dark:text-gray-400 mb-6">Check if a URL is valid and safe</p>
+      <p class="text-center text-gray-600 dark:text-gray-300 mb-6">Check if a URL is valid and safe</p>
 
       <form id="url-form" class="space-y-4">
-        <label for="url" class="block text-sm font-medium">Enter URL:</label>
+        <label for="url" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Enter URL:</label>
         <input type="text" id="url" name="url" required
-          class="w-full p-3 rounded-xl border border-gray-300 dark:border-gray-700 dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-400 transition"
+          class="w-full p-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-400 dark:focus:ring-indigo-500 transition"
           placeholder="https://example.com" aria-label="URL input" />
 
         <button type="submit"
@@ -86,27 +92,27 @@
         </button>
       </form>
 
-      <div id="result" class="mt-6 text-center text-lg font-medium"></div>
+      <div id="result" class="mt-6 text-center text-lg font-medium text-gray-800 dark:text-gray-200"></div>
 
       <div id="qr-container" class="mt-6 flex justify-center hidden">
-        <canvas id="qr-code"></canvas>
+        <canvas id="qr-code" class="bg-white p-2 rounded-lg"></canvas>
       </div>
 
       <div id="action-buttons" class="mt-6 space-y-4 hidden">
         <div class="button-group">
           <button id="shorten-btn"
-            class="py-3 px-4 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition hover-scale flex items-center justify-center gap-2">
+            class="py-3 px-4 bg-blue-500 dark:bg-blue-600 text-white rounded-xl hover:bg-blue-600 dark:hover:bg-blue-700 transition hover-scale flex items-center justify-center gap-2">
             <span>🔗</span>
             <span>Shorten URL</span>
           </button>
           <button id="download-btn"
-            class="py-3 px-4 bg-green-500 text-white rounded-xl hover:bg-green-600 transition hover-scale flex items-center justify-center gap-2">
+            class="py-3 px-4 bg-green-500 dark:bg-green-600 text-white rounded-xl hover:bg-green-600 dark:hover:bg-green-700 transition hover-scale flex items-center justify-center gap-2">
             <span>⬇️</span>
             <span>Download QR</span>
           </button>
         </div>
         <button id="share-btn"
-          class="w-full py-3 px-4 bg-purple-500 text-white rounded-xl hover:bg-purple-600 transition hover-scale flex items-center justify-center gap-2">
+          class="w-full py-3 px-4 bg-purple-500 dark:bg-purple-600 text-white rounded-xl hover:bg-purple-600 dark:hover:bg-purple-700 transition hover-scale flex items-center justify-center gap-2">
           <span>📤</span>
           <span>Share URL & QR Code</span>
         </button>
@@ -186,7 +192,13 @@
           resultDiv.textContent = '✅ URL is valid and safe!';
           qrContainer.classList.remove('hidden');
           actionButtons.classList.remove('hidden');
-          QRCode.toCanvas(qrCanvas, url, { width: 180 });
+          QRCode.toCanvas(qrCanvas, url, { 
+            width: 180,
+            color: {
+              dark: html.classList.contains('dark') ? '#ffffff' : '#000000',
+              light: html.classList.contains('dark') ? '#1f2937' : '#ffffff'
+            }
+          });
         } else {
           resultDiv.textContent = '❌ Invalid URL. Please enter a correct one.';
         }
