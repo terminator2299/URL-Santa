@@ -41,6 +41,20 @@
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
+
+    .hover-scale {
+      transition: transform 0.3s ease;
+    }
+
+    .hover-scale:hover {
+      transform: scale(1.05);
+    }
+
+    .button-group {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.5rem;
+    }
   </style>
 </head>
 
@@ -48,14 +62,14 @@
 
   <!-- Theme Toggle Button -->
   <div class="absolute top-4 right-4">
-    <button id="theme-toggle" class="p-2 rounded-full text-xl shadow bg-indigo-500 text-white hover:bg-indigo-600 transition" aria-label="Toggle theme">
+    <button id="theme-toggle" class="p-2 rounded-full text-xl shadow bg-indigo-500 text-white hover:bg-indigo-600 transition hover-scale" aria-label="Toggle theme">
       🌙
     </button>
   </div>
 
   <div class="flex flex-col items-center justify-center min-h-screen p-4">
     <div
-      class="bg-white dark:bg-gray-900 rounded-2xl shadow-xl p-10 w-full max-w-md transform transition-all animate-fade-in-up"
+      class="bg-white dark:bg-gray-900 rounded-2xl shadow-xl p-10 w-full max-w-md transform transition-all animate-fade-in-up hover-scale"
     >
       <h1 class="text-4xl font-bold text-center text-indigo-600 dark:text-indigo-400 mb-4 tracking-tight">URL Santa</h1>
       <p class="text-center text-gray-600 dark:text-gray-400 mb-6">Check if a URL is valid and safe</p>
@@ -67,7 +81,7 @@
           placeholder="https://example.com" aria-label="URL input" />
 
         <button type="submit"
-          class="w-full py-3 bg-indigo-500 text-white rounded-xl font-semibold hover:bg-indigo-600 transition duration-200 shadow-md hover:shadow-lg">
+          class="w-full py-3 bg-indigo-500 text-white rounded-xl font-semibold hover:bg-indigo-600 transition duration-200 shadow-md hover:shadow-lg hover-scale">
           🚀 Check URL
         </button>
       </form>
@@ -78,10 +92,23 @@
         <canvas id="qr-code"></canvas>
       </div>
 
-      <div id="download-container" class="mt-4 text-center hidden">
-        <button id="download-btn"
-          class="py-2 px-4 bg-green-500 text-white rounded-xl hover:bg-green-600 transition">
-          ⬇️ Download QR Code
+      <div id="action-buttons" class="mt-6 space-y-4 hidden">
+        <div class="button-group">
+          <button id="shorten-btn"
+            class="py-3 px-4 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition hover-scale flex items-center justify-center gap-2">
+            <span>🔗</span>
+            <span>Shorten URL</span>
+          </button>
+          <button id="download-btn"
+            class="py-3 px-4 bg-green-500 text-white rounded-xl hover:bg-green-600 transition hover-scale flex items-center justify-center gap-2">
+            <span>⬇️</span>
+            <span>Download QR</span>
+          </button>
+        </div>
+        <button id="share-btn"
+          class="w-full py-3 px-4 bg-purple-500 text-white rounded-xl hover:bg-purple-600 transition hover-scale flex items-center justify-center gap-2">
+          <span>📤</span>
+          <span>Share URL & QR Code</span>
         </button>
       </div>
     </div>
@@ -90,6 +117,17 @@
   <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
 
   <script>
+    // Function to reset the form and UI
+    function resetForm() {
+      document.getElementById('url-form').reset();
+      document.getElementById('result').textContent = '';
+      document.getElementById('qr-container').classList.add('hidden');
+      document.getElementById('action-buttons').classList.add('hidden');
+    }
+
+    // Reset form when page is loaded or refreshed
+    window.addEventListener('load', resetForm);
+
     // Theme toggle logic
     const themeToggle = document.getElementById('theme-toggle');
     const html = document.documentElement;
@@ -127,15 +165,17 @@
     const resultDiv = document.getElementById('result');
     const qrContainer = document.getElementById('qr-container');
     const qrCanvas = document.getElementById('qr-code');
-    const downloadContainer = document.getElementById('download-container');
+    const actionButtons = document.getElementById('action-buttons');
     const downloadBtn = document.getElementById('download-btn');
+    const shortenBtn = document.getElementById('shorten-btn');
+    const shareBtn = document.getElementById('share-btn');
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       const url = urlInput.value.trim();
       resultDiv.textContent = '⏳ Checking...';
       qrContainer.classList.add('hidden');
-      downloadContainer.classList.add('hidden');
+      actionButtons.classList.add('hidden');
 
       try {
         const response = await fetch(`/check?url=${encodeURIComponent(url)}`);
@@ -145,7 +185,7 @@
         if (data.valid) {
           resultDiv.textContent = '✅ URL is valid and safe!';
           qrContainer.classList.remove('hidden');
-          downloadContainer.classList.remove('hidden');
+          actionButtons.classList.remove('hidden');
           QRCode.toCanvas(qrCanvas, url, { width: 180 });
         } else {
           resultDiv.textContent = '❌ Invalid URL. Please enter a correct one.';
@@ -161,6 +201,35 @@
       link.download = 'url-qr-code.png';
       link.href = qrCanvas.toDataURL('image/png');
       link.click();
+    });
+
+    shortenBtn.addEventListener('click', async () => {
+      const url = urlInput.value.trim();
+      try {
+        const response = await fetch(`/shorten?url=${encodeURIComponent(url)}`);
+        if (!response.ok) throw new Error('Network error');
+        const data = await response.json();
+        resultDiv.textContent = `🔗 Shortened URL: ${data.shortenedUrl}`;
+      } catch (err) {
+        resultDiv.textContent = '⚠️ Error shortening URL. Please try again.';
+        console.error(err);
+      }
+    });
+
+    shareBtn.addEventListener('click', () => {
+      const url = urlInput.value.trim();
+      const qrCodeUrl = qrCanvas.toDataURL('image/png');
+      const shareData = {
+        title: 'URL Santa',
+        text: `Check out this URL: ${url}`,
+        url: url,
+        files: [new File([qrCodeUrl], 'qr-code.png', { type: 'image/png' })]
+      };
+      if (navigator.share) {
+        navigator.share(shareData).catch(console.error);
+      } else {
+        alert('Sharing is not supported on this browser.');
+      }
     });
   </script>
 </body>
