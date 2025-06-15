@@ -111,11 +111,6 @@
             <span>Download QR</span>
           </button>
         </div>
-        <button id="share-btn"
-          class="w-full py-3 px-4 bg-purple-500 dark:bg-purple-600 text-white rounded-xl hover:bg-purple-600 dark:hover:bg-purple-700 transition hover-scale flex items-center justify-center gap-2">
-          <span>📤</span>
-          <span>Share URL & QR Code</span>
-        </button>
       </div>
     </div>
   </div>
@@ -174,7 +169,6 @@
     const actionButtons = document.getElementById('action-buttons');
     const downloadBtn = document.getElementById('download-btn');
     const shortenBtn = document.getElementById('shorten-btn');
-    const shareBtn = document.getElementById('share-btn');
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -225,22 +219,6 @@
       } catch (err) {
         resultDiv.textContent = '⚠️ Error shortening URL. Please try again.';
         console.error(err);
-      }
-    });
-
-    shareBtn.addEventListener('click', () => {
-      const url = urlInput.value.trim();
-      const qrCodeUrl = qrCanvas.toDataURL('image/png');
-      const shareData = {
-        title: 'URL Santa',
-        text: `Check out this URL: ${url}`,
-        url: url,
-        files: [new File([qrCodeUrl], 'qr-code.png', { type: 'image/png' })]
-      };
-      if (navigator.share) {
-        navigator.share(shareData).catch(console.error);
-      } else {
-        alert('Sharing is not supported on this browser.');
       }
     });
   </script>

@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Query
+from fastapi import FastAPI, Query, Request
 from fastapi.responses import JSONResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 import validators
@@ -27,7 +27,7 @@ def check_url(url: str = Query(...)):
     return JSONResponse(content={"valid": is_valid})
 
 @app.get("/shorten")
-def shorten_url(url: str = Query(...)):
+def shorten_url(request: Request, url: str = Query(...)):
     if not validators.url(url):
         return JSONResponse(
             status_code=400,
@@ -40,8 +40,11 @@ def shorten_url(url: str = Query(...)):
     # Store the mapping
     url_mapping[short_code] = url
     
+    # Get the base URL from the request
+    base_url = str(request.base_url).rstrip('/')
+    
     # Return the shortened URL
-    shortened_url = f"http://localhost:8000/{short_code}"
+    shortened_url = f"{base_url}/{short_code}"
     return JSONResponse(content={"shortenedUrl": shortened_url})
 
 @app.get("/{short_code}")
