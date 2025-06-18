@@ -86,6 +86,18 @@
           class="w-full p-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-400 dark:focus:ring-indigo-500 transition"
           placeholder="https://example.com" aria-label="URL input" />
 
+        <div class="flex items-center space-x-2">
+          <input type="checkbox" id="enable-password" class="rounded text-indigo-500 focus:ring-indigo-400">
+          <label for="enable-password" class="text-sm font-medium text-gray-700 dark:text-gray-300">Enable password protection</label>
+        </div>
+
+        <div id="password-field" class="hidden">
+          <label for="password" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Password:</label>
+          <input type="password" id="password" name="password"
+            class="w-full p-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-400 dark:focus:ring-indigo-500 transition"
+            placeholder="Enter password" aria-label="Password input" />
+        </div>
+
         <button type="submit"
           class="w-full py-3 bg-indigo-500 text-white rounded-xl font-semibold hover:bg-indigo-600 transition duration-200 shadow-md hover:shadow-lg hover-scale">
           🚀 Check URL
@@ -211,14 +223,34 @@
 
     shortenBtn.addEventListener('click', async () => {
       const url = urlInput.value.trim();
+      const password = document.getElementById('password').value;
       try {
-        const response = await fetch(`/shorten?url=${encodeURIComponent(url)}`);
+        const response = await fetch('/shorten', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            url: url,
+            password: password || null
+          })
+        });
         if (!response.ok) throw new Error('Network error');
         const data = await response.json();
         resultDiv.textContent = `🔗 Shortened URL: ${data.shortenedUrl}`;
       } catch (err) {
         resultDiv.textContent = '⚠️ Error shortening URL. Please try again.';
         console.error(err);
+      }
+    });
+
+    // Password field toggle
+    document.getElementById('enable-password').addEventListener('change', function() {
+      const passwordField = document.getElementById('password-field');
+      if (this.checked) {
+        passwordField.classList.remove('hidden');
+      } else {
+        passwordField.classList.add('hidden');
       }
     });
   </script>

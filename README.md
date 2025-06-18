@@ -1,83 +1,97 @@
-# URL Santa 🎅
+# URL Santa - Secure URL Shortener
 
-URL Santa is a modern web application that helps users validate URLs, generate QR codes, and manage their links efficiently. Built with FastAPI and modern web technologies, it provides a clean, intuitive interface for URL management.
+URL Santa is a modern, secure URL shortening service with password protection capabilities. Built with FastAPI and featuring a beautiful, responsive UI.
 
-![URL Santa Preview](Soon)
+## Features
 
-## ✨ Features
+- 🔗 URL shortening with custom short codes
+- 🔒 Password protection for sensitive URLs
+- 📱 Responsive design with dark/light mode
+- 📊 QR code generation
+- 🔄 Real-time URL validation
+- 🎨 Modern UI with smooth animations
+- 🌓 Dark/Light theme support
 
-- **URL Validation**: Instantly check if a URL is valid and safe
-- **QR Code Generation**: Generate QR codes for valid URLs
-- **URL Shortening**: Create short, manageable links for long URLs
-- **Share Functionality**: Share URLs and QR codes directly
-- **Dark/Light Mode**: Toggle between dark and light themes
-- **Responsive Design**: Works seamlessly on all devices
-- **Modern UI**: Clean and intuitive user interface
+## Tech Stack
 
-## 🚀 Quick Start
+- **Backend**: FastAPI (Python)
+- **Frontend**: HTML, TailwindCSS, JavaScript
+- **Dependencies**:
+  - FastAPI
+  - Uvicorn
+  - Jinja2
+  - Validators
+  - QRCode
+  - Python-multipart
 
-### Prerequisites
-
-- Python 3.8 or higher
-- pip (Python package installer)
-
-### Installation
+## Installation
 
 1. Clone the repository:
-   ```bash
-   git clone https://github.com/termninator2299/url-santa.git
-   cd url-santa
-   ```
+```bash
+git clone https://github.com/yourusername/URL-Santa.git
+cd URL-Santa
+```
 
-2. Create and activate a virtual environment:
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows, use: venv\Scripts\activate
-   ```
+2. Create a virtual environment:
+```bash
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+```
 
 3. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
+```bash
+pip install -r requirements.txt
+```
 
 4. Run the application:
-   ```bash
-   uvicorn main:app --reload
-   ```
+```bash
+uvicorn main:app --reload
+```
 
-5. Open your browser and navigate to:
-   ```
-   http://localhost:8000
-   ```
+The application will be available at `http://localhost:8000`
 
-## 🛠️ Technologies Used
+## Usage
 
-- **Backend**:
-  - FastAPI
-  - Python
-  - Uvicorn
+1. **Basic URL Shortening**:
+   - Enter a URL in the input field
+   - Click "Check URL" to validate
+   - Click "Shorten URL" to generate a short link
 
-- **Frontend**:
-  - HTML5
-  - Tailwind CSS
-  - JavaScript
-  - QRCode.js
+2. **Password Protection**:
+   - Enable password protection using the checkbox
+   - Set a password for your shortened URL
+   - Share the shortened URL with others
+   - Recipients will need to enter the password to access the original URL
 
-## 📝 API Endpoints
+3. **QR Code**:
+   - After validating a URL, a QR code will be generated
+   - Click "Download QR" to save the QR code
+
+## API Endpoints
 
 - `GET /`: Main application interface
 - `GET /check`: Validate a URL
-- `GET /shorten`: Create a shortened URL
+- `POST /shorten`: Create a shortened URL
 - `GET /{short_code}`: Redirect to original URL
+- `POST /verify-password/{short_code}`: Verify password for protected URLs
 
-## 🔧 Configuration
+## Contributing
 
-The application uses environment variables for configuration. Create a `.env` file in the root directory with the following variables:
+Contributions are welcome! Please feel free to submit a Pull Request.
 
-```env
-HOST=localhost
-PORT=8000
-```
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Author
+
+Your Name - [@yourusername](https://github.com/yourusername)
+
+## Acknowledgments
+
+- FastAPI for the amazing web framework
+- TailwindCSS for the beautiful UI components
+- QRCode.js for QR code generation
 
 ## 🤝 Contributing
 
