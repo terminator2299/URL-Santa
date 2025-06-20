@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en" class="transition-colors duration-500">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Login - URL Santa</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { darkMode: 'class' }
+  </script>
+  <style>
+    @keyframes fadeInUp {
+      0% { opacity: 0; transform: translateY(40px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fade-in-up { animation: fadeInUp 0.7s ease-out forwards; }
+    .hover-scale { transition: transform 0.3s ease; }
+    .hover-scale:hover { transform: scale(1.05); }
+  </style>
+</head>
+<body class="bg-gradient-to-r from-pink-200 via-purple-300 to-indigo-400 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 text-gray-800 dark:text-gray-100 transition-colors duration-500">
+  <div class="absolute top-4 right-4">
+    <a href="/register" class="p-2 rounded-full text-xl shadow bg-indigo-500 text-white hover:bg-indigo-600 transition hover-scale" aria-label="Register">📝</a>
+  </div>
+  <div class="flex flex-col items-center justify-center min-h-screen p-4">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-10 w-full max-w-md transform transition-all animate-fade-in-up hover-scale">
+      <h1 class="text-3xl font-bold text-center text-indigo-600 dark:text-indigo-400 mb-4 tracking-tight">Login</h1>
+      {% if error %}
+        <div class="mb-4 text-center text-red-600 dark:text-red-400 font-semibold">{{ error }}</div>
+      {% endif %}
+      <form action="/login" method="post" class="space-y-4" autocomplete="off">
+        <label for="username" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Username</label>
+        <input type="text" id="username" name="username" required autocomplete="off" class="w-full p-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-400 dark:focus:ring-indigo-500 transition" placeholder="Enter username" />
+        <label for="password" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Password</label>
+        <input type="password" id="password" name="password" required autocomplete="off" class="w-full p-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-400 dark:focus:ring-indigo-500 transition" placeholder="Enter password" />
+        <button type="submit" class="w-full py-3 bg-indigo-500 text-white rounded-xl font-semibold hover:bg-indigo-600 transition duration-200 shadow-md hover:shadow-lg hover-scale">Login</button>
+      </form>
+      <p class="mt-4 text-center text-sm text-gray-600 dark:text-gray-300">Don't have an account? <a href="/register" class="text-indigo-500 hover:underline">Register</a></p>
+    </div>
+  </div>
+</body>
+</html> 

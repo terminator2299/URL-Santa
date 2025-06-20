@@ -5,3 +5,4 @@ jinja2
 validators
 qrcode[pil]
 python-multipart
+passlib[bcrypt]
