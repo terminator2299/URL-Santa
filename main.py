@@ -9,9 +9,8 @@ from typing import Dict, Optional
 from pydantic import BaseModel
 from passlib.context import CryptContext
 import uuid
-from config import users_collection, urls_collection, sessions_collection
+from config import users_collection, urls_collection, sessions_collection, client
 from datetime import datetime
-from pymongo import MongoClient
 
 app = FastAPI()
 
