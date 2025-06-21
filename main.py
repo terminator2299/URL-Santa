@@ -69,13 +69,8 @@ class URLData(BaseModel):
 
 @app.get("/", response_class=HTMLResponse)
 async def read_root(request: Request, user: dict = Depends(get_current_user)):
-    if not user:
-        # If user is not logged in, redirect to login page
-        return RedirectResponse("/login", status_code=302)
-    else:
-        # If user is logged in, show the main website
-        with open("templates/index.html", "r") as f:
-            return HTMLResponse(content=f.read())
+    # user will be None if not logged in
+    return templates.TemplateResponse("index.html", {"request": request, "user": user})
 
 @app.get("/check")
 def check_url(url: str = Query(...)):
