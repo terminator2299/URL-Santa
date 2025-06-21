@@ -84,7 +84,7 @@
 
     <main class="flex-grow flex items-center justify-center p-4">
         <div class="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-2xl space-y-6 transition-colors duration-500 w-full max-w-lg">
-            <form id="url-form" class="space-y-4">
+            <form id="url-form" class="space-y-4" autocomplete="off">
                 <label for="url" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Enter URL:</label>
                 <input type="text" id="url" name="url" placeholder="https://example.com" class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:focus:ring-indigo-400 transition" required />
 
@@ -95,7 +95,7 @@
 
                 <div id="password-field" class="hidden">
                   <label for="password" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Password (optional):</label>
-                  <input type="password" id="password" name="password" placeholder="Leave blank for no password" class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:focus:ring-indigo-400 transition" />
+                  <input type="password" id="password" name="password" placeholder="Leave blank for no password" class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:focus:ring-indigo-400 transition" autocomplete="new-password" />
                 </div>
 
                 <button type="submit"
