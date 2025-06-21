@@ -11,6 +11,7 @@ from passlib.context import CryptContext
 import uuid
 from config import users_collection, urls_collection, sessions_collection
 from datetime import datetime
+from pymongo import MongoClient
 
 app = FastAPI()
 
@@ -330,3 +331,20 @@ async def verify_password(short_code: str, data: dict):
         return JSONResponse(content={"redirectUrl": url_doc["url"]})
     
     raise HTTPException(status_code=401, detail="Incorrect password")
+
+@app.get("/test-db")
+async def test_db_connection():
+    try:
+        # Check if we can connect to the database
+        await client.admin.command('ping')
+        return {"status": "success", "message": "MongoDB connection successful"}
+    except Exception as e:
+        return {"status": "error", "message": str(e), "type": type(e).__name__}
+
+@app.get("/test-env")
+async def test_environment():
+    mongodb_url = os.getenv("MONGODB_URL", "NOT_SET")
+    return {
+        "mongodb_url_set": mongodb_url != "NOT_SET",
+        "mongodb_url_preview": mongodb_url[:20] + "..." if len(mongodb_url) > 20 else mongodb_url
+    }
