@@ -1,8 +1,8 @@
 import os
 from motor.motor_asyncio import AsyncIOMotorClient
 
-# MongoDB connection string - replace with your actual connection string
-MONGODB_URL = os.getenv("MONGODB_URL", "mongodb+srv://UrlSanta:UrlSanta123@urlsanta.es4vp7m.mongodb.net/?retryWrites=true&w=majority&appName=UrlSanta")
+# MongoDB connection string - use environment variable for security
+MONGODB_URL = os.getenv("MONGODB_URL", "mongodb://localhost:27017")
 
 # Database and collection names
 DATABASE_NAME = "UrlSanta"

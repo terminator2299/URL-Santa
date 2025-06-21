@@ -43,12 +43,23 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-4. Run the application:
+4. Set up environment variables:
+   - Copy `env.example` to `.env`
+   - Add your MongoDB Atlas connection string:
+   ```bash
+   MONGODB_URL=mongodb+srv://your_username:your_password@your_cluster.mongodb.net/?retryWrites=true&w=majority
+   ```
+
+5. Run the application:
 ```bash
 uvicorn main:app --reload
 ```
 
 The application will be available at `http://localhost:8000`
+
+## Environment Variables
+
+- `MONGODB_URL`: Your MongoDB Atlas connection string (required for production)
 
 ## Usage
 
