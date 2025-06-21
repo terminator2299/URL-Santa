@@ -69,8 +69,16 @@ class URLData(BaseModel):
 
 @app.get("/", response_class=HTMLResponse)
 async def read_root(request: Request, user: dict = Depends(get_current_user)):
-    # user will be None if not logged in
+    if not user:
+        return RedirectResponse("/login", status_code=302)
     return templates.TemplateResponse("index.html", {"request": request, "user": user})
+
+@app.get("/guest", response_class=HTMLResponse)
+async def guest_home(request: Request):
+    """
+    Guest view for the main page.
+    """
+    return templates.TemplateResponse("index.html", {"request": request, "user": None})
 
 @app.get("/check")
 def check_url(url: str = Query(...)):

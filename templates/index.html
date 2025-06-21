@@ -64,81 +64,68 @@
   </style>
 </head>
 
-<body class="bg-gradient-to-r from-pink-200 via-purple-300 to-indigo-400 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 text-gray-800 dark:text-gray-100 transition-colors duration-500">
+<body class="bg-gradient-to-r from-pink-200 via-purple-300 to-indigo-400 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 text-gray-800 dark:text-gray-100 transition-colors duration-500 flex flex-col min-h-screen">
 
-  <header>
-    <h1>URL Santa 🎅</h1>
-    <nav>
-      {% if user %}
-        <span>Welcome, {{ user.username }}!</span>
-        <a href="/logout" class="button">Logout</a>
-      {% else %}
-        <a href="/login" class="button">Login</a>
-        <a href="/register" class="button">Register</a>
-      {% endif %}
-    </nav>
-  </header>
+    <header class="p-4 flex justify-between items-center">
+        <h1 class="text-3xl font-bold">URL Santa 🎅</h1>
+        <nav class="flex items-center gap-4">
+            {% if user %}
+                <span class="text-lg">Welcome, {{ user.username }}!</span>
+                <a href="/logout" class="px-4 py-2 rounded-lg text-sm font-medium shadow bg-red-500 text-white hover:bg-red-600 transition hover-scale">Logout</a>
+            {% else %}
+                <a href="/login" class="px-4 py-2 rounded-lg text-sm font-medium shadow bg-indigo-500 text-white hover:bg-indigo-600 transition hover-scale">Login</a>
+                <a href="/register" class="px-4 py-2 rounded-lg text-sm font-medium shadow bg-green-500 text-white hover:bg-green-600 transition hover-scale">Register</a>
+            {% endif %}
+            <button id="theme-toggle" class="p-2 rounded-full text-xl shadow bg-gray-500 text-white hover:bg-gray-600 transition hover-scale" aria-label="Toggle theme">
+                🌙
+            </button>
+        </nav>
+    </header>
 
-  <!-- Theme Toggle Button and Logout Button -->
-  <div class="absolute top-4 right-4 flex gap-2">
-    <button id="theme-toggle" class="p-2 rounded-full text-xl shadow bg-indigo-500 text-white hover:bg-indigo-600 transition hover-scale" aria-label="Toggle theme">
-      🌙
-    </button>
-  </div>
+    <main class="flex-grow flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-2xl space-y-6 transition-colors duration-500 w-full max-w-lg">
+            <form id="url-form" class="space-y-4">
+                <label for="url" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Enter URL:</label>
+                <input type="text" id="url" name="url" placeholder="https://example.com" class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:focus:ring-indigo-400 transition" required />
 
-  <div class="flex flex-col items-center justify-center min-h-screen p-4">
-    <div
-      class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-10 w-full max-w-md transform transition-all animate-fade-in-up hover-scale"
-    >
-      <h1 class="text-4xl font-bold text-center text-indigo-600 dark:text-indigo-400 mb-4 tracking-tight">URL Santa</h1>
-      <p class="text-center text-gray-600 dark:text-gray-300 mb-6">Check if a URL is valid and safe</p>
+                <div class="flex items-center space-x-2">
+                  <input type="checkbox" id="enable-password" class="rounded text-indigo-500 focus:ring-indigo-400">
+                  <label for="enable-password" class="text-sm font-medium text-gray-700 dark:text-gray-300">Enable password protection</label>
+                </div>
 
-      <form id="url-form" class="space-y-4">
-        <label for="url" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Enter URL:</label>
-        <input type="text" id="url" name="url" required
-          class="w-full p-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-400 dark:focus:ring-indigo-500 transition"
-          placeholder="https://example.com" aria-label="URL input" />
+                <div id="password-field" class="hidden">
+                  <label for="password" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Password (optional):</label>
+                  <input type="password" id="password" name="password" placeholder="Leave blank for no password" class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:focus:ring-indigo-400 transition" />
+                </div>
 
-        <div class="flex items-center space-x-2">
-          <input type="checkbox" id="enable-password" class="rounded text-indigo-500 focus:ring-indigo-400">
-          <label for="enable-password" class="text-sm font-medium text-gray-700 dark:text-gray-300">Enable password protection</label>
+                <button type="submit"
+                  class="w-full py-3 bg-indigo-500 text-white rounded-xl font-semibold hover:bg-indigo-600 transition duration-200 shadow-md hover:shadow-lg hover-scale">
+                    🚀 Check URL
+                </button>
+            </form>
+
+            <div id="result" class="mt-6 text-center text-lg font-medium text-gray-800 dark:text-gray-200"></div>
+
+            <div id="qr-container" class="mt-6 flex justify-center hidden">
+              <canvas id="qr-code" class="bg-white p-2 rounded-lg"></canvas>
+            </div>
+
+            <div id="action-buttons" class="mt-6 space-y-4 hidden">
+              <div class="button-group">
+                <button id="shorten-btn"
+                  class="py-3 px-4 bg-blue-500 dark:bg-blue-600 text-white rounded-xl hover:bg-blue-600 dark:hover:bg-blue-700 transition hover-scale flex items-center justify-center gap-2">
+                  <span>🔗</span>
+                  <span>Shorten URL</span>
+                </button>
+                <button id="download-btn"
+                  class="py-3 px-4 bg-green-500 dark:bg-green-600 text-white rounded-xl hover:bg-green-600 dark:hover:bg-green-700 transition hover-scale flex items-center justify-center gap-2">
+                  <span>⬇️</span>
+                  <span>Download QR</span>
+                </button>
+              </div>
+            </div>
         </div>
-
-        <div id="password-field" class="hidden">
-          <label for="password" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Password:</label>
-          <input type="password" id="password" name="password"
-            class="w-full p-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-400 dark:focus:ring-indigo-500 transition"
-            placeholder="Enter password" aria-label="Password input" />
-        </div>
-
-        <button type="submit"
-          class="w-full py-3 bg-indigo-500 text-white rounded-xl font-semibold hover:bg-indigo-600 transition duration-200 shadow-md hover:shadow-lg hover-scale">
-          🚀 Check URL
-        </button>
-      </form>
-
-      <div id="result" class="mt-6 text-center text-lg font-medium text-gray-800 dark:text-gray-200"></div>
-
-      <div id="qr-container" class="mt-6 flex justify-center hidden">
-        <canvas id="qr-code" class="bg-white p-2 rounded-lg"></canvas>
-      </div>
-
-      <div id="action-buttons" class="mt-6 space-y-4 hidden">
-        <div class="button-group">
-          <button id="shorten-btn"
-            class="py-3 px-4 bg-blue-500 dark:bg-blue-600 text-white rounded-xl hover:bg-blue-600 dark:hover:bg-blue-700 transition hover-scale flex items-center justify-center gap-2">
-            <span>🔗</span>
-            <span>Shorten URL</span>
-          </button>
-          <button id="download-btn"
-            class="py-3 px-4 bg-green-500 dark:bg-green-600 text-white rounded-xl hover:bg-green-600 dark:hover:bg-green-700 transition hover-scale flex items-center justify-center gap-2">
-            <span>⬇️</span>
-            <span>Download QR</span>
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
+    </main>
 
   <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
 
