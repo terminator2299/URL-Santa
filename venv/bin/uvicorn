@@ -1,4 +1,4 @@
-#!/Users/bhavyakhandelwal/Documents/Codes/URL-Santa/venv/bin/python
+#!/Users/bhavyakhandelwal/Documents/Codes/URL-Santa/venv/bin/python3.11
 # -*- coding: utf-8 -*-
 import re
 import sys

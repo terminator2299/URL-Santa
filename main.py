@@ -9,20 +9,13 @@ from typing import Dict, Optional
 from pydantic import BaseModel
 from passlib.context import CryptContext
 import uuid
+from config import users_collection, urls_collection, sessions_collection
+from datetime import datetime
 
 app = FastAPI()
 
 # Password hashing context
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
-# In-memory user store: {username: {"username": ..., "hashed_password": ...}}
-users: Dict[str, Dict[str, str]] = {}
-
-# Simple session store: {session_id: username}
-sessions: Dict[str, str] = {}
-
-# Store shortened URLs with their passwords (in a real application, you'd use a database)
-url_mapping: Dict[str, Dict[str, str]] = {}
 
 # Optional: Serve static files if needed in the future
 if not os.path.exists("static"):
@@ -31,14 +24,58 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 
 templates = Jinja2Templates(directory="templates")
 
+# Helper functions for authentication
+async def get_current_user(session_id: str = Cookie(default=None)):
+    if session_id:
+        try:
+            # Find session in MongoDB
+            session_doc = await sessions_collection.find_one({"session_id": session_id})
+            if session_doc:
+                username = session_doc.get("username")
+                # Find user in MongoDB
+                user_doc = await users_collection.find_one({"username": username})
+                if user_doc:
+                    return {"username": user_doc["username"], "hashed_password": user_doc["hashed_password"]}
+        except Exception as e:
+            print(f"MongoDB connection error: {e}")
+            return None
+    return None
+
+def get_password_hash(password: str) -> str:
+    return pwd_context.hash(password)
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    return pwd_context.verify(plain_password, hashed_password)
+
+async def create_session(username: str) -> str:
+    session_id = str(uuid.uuid4())
+    try:
+        # Store session in MongoDB
+        await sessions_collection.insert_one({
+            "session_id": session_id,
+            "username": username
+        })
+    except Exception as e:
+        print(f"MongoDB connection error: {e}")
+        # Fallback to in-memory storage if MongoDB fails
+        if not hasattr(app.state, 'fallback_sessions'):
+            app.state.fallback_sessions = {}
+        app.state.fallback_sessions[session_id] = username
+    return session_id
+
 class URLData(BaseModel):
     url: str
     password: Optional[str] = None
 
 @app.get("/", response_class=HTMLResponse)
-def read_root():
-    with open("templates/index.html", "r") as f:
-        return HTMLResponse(content=f.read())
+async def read_root(request: Request, user: dict = Depends(get_current_user)):
+    if not user:
+        # If user is not logged in, redirect to login page
+        return RedirectResponse("/login", status_code=302)
+    else:
+        # If user is logged in, show the main website
+        with open("templates/index.html", "r") as f:
+            return HTMLResponse(content=f.read())
 
 @app.get("/check")
 def check_url(url: str = Query(...)):
@@ -46,7 +83,10 @@ def check_url(url: str = Query(...)):
     return JSONResponse(content={"valid": is_valid})
 
 @app.post("/shorten")
-async def shorten_url(request: Request, data: URLData):
+async def shorten_url(request: Request, data: URLData, user: dict = Depends(get_current_user)):
+    if not user:
+        return RedirectResponse("/login", status_code=302)
+    
     if not validators.url(data.url):
         return JSONResponse(
             status_code=400,
@@ -56,11 +96,15 @@ async def shorten_url(request: Request, data: URLData):
     # Generate a short code
     short_code = secrets.token_urlsafe(6)
     
-    # Store the mapping with password if provided
-    url_mapping[short_code] = {
+    # Store the mapping with password if provided in MongoDB
+    url_doc = {
+        "short_code": short_code,
         "url": data.url,
-        "password": data.password
+        "password": data.password,
+        "username": user["username"],  # Associate URL with user
+        "created_at": datetime.utcnow()
     }
+    await urls_collection.insert_one(url_doc)
     
     # Get the base URL from the request
     base_url = str(request.base_url).rstrip('/')
@@ -69,7 +113,110 @@ async def shorten_url(request: Request, data: URLData):
     shortened_url = f"{base_url}/{short_code}"
     return JSONResponse(content={"shortenedUrl": shortened_url})
 
+# Registration endpoint
+@app.get("/register", response_class=HTMLResponse)
+def register_form(request: Request):
+    return templates.TemplateResponse("register.html", {"request": request})
 
+@app.get("/register/", response_class=HTMLResponse)
+def register_form_redirect(request: Request):
+    return RedirectResponse("/register", status_code=301)
+
+@app.post("/register", response_class=HTMLResponse)
+async def register(request: Request):
+    form = await request.form()
+    username = form.get("username")
+    password = form.get("password")
+    if not username or not password:
+        return HTMLResponse("Missing username or password", status_code=400)
+    
+    try:
+        # Check if user exists in MongoDB
+        existing_user = await users_collection.find_one({"username": username})
+        if existing_user:
+            return HTMLResponse("Username already exists", status_code=400)
+        
+        hashed_password = pwd_context.hash(password)
+        # Store user in MongoDB
+        await users_collection.insert_one({
+            "username": username,
+            "hashed_password": hashed_password,
+            "created_at": datetime.utcnow()
+        })
+        return RedirectResponse("/login", status_code=302)
+    except Exception as e:
+        print(f"MongoDB connection error during registration: {e}")
+        return HTMLResponse("Database connection error. Please try again.", status_code=500)
+
+# Login endpoint
+@app.get("/login", response_class=HTMLResponse)
+def login_form(request: Request):
+    return templates.TemplateResponse("login.html", {"request": request})
+
+@app.get("/login/", response_class=HTMLResponse)
+def login_form_redirect(request: Request):
+    return RedirectResponse("/login", status_code=301)
+
+@app.post("/login", response_class=HTMLResponse)
+async def login(request: Request, response: Response):
+    form = await request.form()
+    username = form.get("username")
+    password = form.get("password")
+    
+    try:
+        # Find user in MongoDB
+        user_doc = await users_collection.find_one({"username": username})
+        if not user_doc or not pwd_context.verify(password, user_doc["hashed_password"]):
+            # Render login page with error message
+            return templates.TemplateResponse(
+                "login.html",
+                {"request": request, "error": "Invalid username or password."}
+            )
+        
+        session_id = await create_session(username)
+        resp = RedirectResponse("/", status_code=302)
+        resp.set_cookie(key="session_id", value=session_id, httponly=True)
+        return resp
+    except Exception as e:
+        print(f"MongoDB connection error during login: {e}")
+        return templates.TemplateResponse(
+            "login.html",
+            {"request": request, "error": "Database connection error. Please try again."}
+        )
+
+# Logout endpoint
+@app.get("/logout")
+async def logout(session_id: str = Cookie(default=None)):
+    if session_id:
+        # Remove session from MongoDB
+        await sessions_collection.delete_one({"session_id": session_id})
+    resp = RedirectResponse("/login", status_code=302)
+    resp.delete_cookie("session_id")
+    return resp
+
+# Protected dashboard route
+@app.get("/dashboard", response_class=HTMLResponse)
+async def dashboard(user: dict = Depends(get_current_user)):
+    if not user:
+        return RedirectResponse("/login", status_code=302)
+    return f"""
+    <html><body>
+    <h2>Welcome, {user['username']}!</h2>
+    <a href='/logout'>Logout</a>
+    </body></html>
+    """
+
+@app.get("/{short_code}")
+async def redirect_to_url(short_code: str):
+    # Find URL in MongoDB
+    url_doc = await urls_collection.find_one({"short_code": short_code})
+    if not url_doc:
+        return JSONResponse(
+            status_code=404,
+            content={"error": "Short URL not found"}
+        )
+    
+    url_data = {"url": url_doc["url"], "password": url_doc.get("password")}
     
     # If no password is set, redirect directly
     if not url_data.get("password"):
@@ -172,105 +319,14 @@ async def shorten_url(request: Request, data: URLData):
         """
     )
 
-
-
-# Helper functions for authentication
-
-def get_password_hash(password: str) -> str:
-    return pwd_context.hash(password)
-
-def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return pwd_context.verify(plain_password, hashed_password)
-
-def create_session(username: str) -> str:
-    session_token = secrets.token_urlsafe(16)
-    sessions[session_token] = username
-    return session_token
-
-def get_current_user(session_id: str = Cookie(default=None)):
-    if session_id and session_id in sessions:
-        username = sessions[session_id]
-        return users.get(username)
-    return None
-
-# Registration endpoint
-@app.get("/register", response_class=HTMLResponse)
-def register_form(request: Request):
-    return templates.TemplateResponse("register.html", {"request": request})
-
-@app.post("/register", response_class=HTMLResponse)
-async def register(request: Request):
-    form = await request.form()
-    username = form.get("username")
-    password = form.get("password")
-    if not username or not password:
-        return HTMLResponse("Missing username or password", status_code=400)
-    if username in users:
-        return HTMLResponse("Username already exists", status_code=400)
-    hashed_password = pwd_context.hash(password)
-    users[username] = {"username": username, "hashed_password": hashed_password}
-    return RedirectResponse("/login", status_code=302)
-
-# Login endpoint
-@app.get("/login", response_class=HTMLResponse)
-def login_form(request: Request):
-    return templates.TemplateResponse("login.html", {"request": request})
-
-@app.post("/login", response_class=HTMLResponse)
-async def login(request: Request, response: Response):
-    form = await request.form()
-    username = form.get("username")
-    password = form.get("password")
-    user = users.get(username)
-    if not user or not pwd_context.verify(password, user["hashed_password"]):
-        # Render login page with error message
-        return templates.TemplateResponse(
-            "login.html",
-            {"request": request, "error": "Invalid username or password."}
-        )
-    session_id = str(uuid.uuid4())
-    sessions[session_id] = username
-    resp = RedirectResponse("/", status_code=302)
-    resp.set_cookie(key="session_id", value=session_id, httponly=True)
-    return resp
-
-# Logout endpoint
-@app.get("/logout")
-def logout(session_id: str = Cookie(default=None)):
-    if session_id and session_id in sessions:
-        sessions.pop(session_id)
-    resp = RedirectResponse("/login", status_code=302)
-    resp.delete_cookie("session_id")
-    return resp
-
-# Protected dashboard route
-@app.get("/dashboard", response_class=HTMLResponse)
-def dashboard(user: dict = Depends(get_current_user)):
-    if not user:
-        return RedirectResponse("/login", status_code=302)
-    return f"""
-    <html><body>
-    <h2>Welcome, {user['username']}!</h2>
-    <a href='/logout'>Logout</a>
-    </body></html>
-    """
-@app.get("/{short_code}")
-async def redirect_to_url(short_code: str):
-    if short_code not in url_mapping:
-        return JSONResponse(
-            status_code=404,
-            content={"error": "Short URL not found"}
-        )
+@app.post("/verify-password/{short_code}")
+async def verify_password(short_code: str, data: dict):
+    # Find URL in MongoDB
+    url_doc = await urls_collection.find_one({"short_code": short_code})
+    if not url_doc:
+        raise HTTPException(status_code=404, detail="Short URL not found")
     
-    url_data = url_mapping[short_code]
-
-    @app.post("/verify-password/{short_code}")
-    async def verify_password(short_code: str, data: dict):
-        if short_code not in url_mapping:
-            raise HTTPException(status_code=404, detail="Short URL not found")
-        
-        url_data = url_mapping[short_code]
-        if data.get("password") == url_data.get("password"):
-            return JSONResponse(content={"redirectUrl": url_data["url"]})
-        
-        raise HTTPException(status_code=401, detail="Incorrect password")
+    if data.get("password") == url_doc.get("password"):
+        return JSONResponse(content={"redirectUrl": url_doc["url"]})
+    
+    raise HTTPException(status_code=401, detail="Incorrect password")

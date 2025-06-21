@@ -6,3 +6,4 @@ validators
 qrcode[pil]
 python-multipart
 passlib[bcrypt]
+motor
