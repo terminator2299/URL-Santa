@@ -1,21 +1,23 @@
 # URL Santa - Secure URL Shortener
 
-URL Santa is a modern, secure URL shortening service with password protection capabilities. Built with FastAPI and featuring a beautiful, responsive UI.
+URL Santa is a modern, secure URL shortening service with password protection capabilities. Built with FastAPI and featuring a beautiful, responsive dark-themed UI.
 
 ## Features
 
 - 🔗 URL shortening with custom short codes
 - 🔒 Password protection for sensitive URLs
-- 📱 Responsive design with dark/light mode
-- 📊 QR code generation
+- 👤 User authentication system
+- 📱 Responsive design with dark theme
+- 📊 QR code generation and download
 - 🔄 Real-time URL validation
 - 🎨 Modern UI with smooth animations
-- 🌓 Dark/Light theme support
+- 🗄️ MongoDB Atlas integration
 
 ## Tech Stack
 
 - **Backend**: FastAPI (Python)
-- **Frontend**: HTML, TailwindCSS, JavaScript
+- **Frontend**: HTML, TailwindCSS, Alpine.js
+- **Database**: MongoDB Atlas
 - **Dependencies**:
   - FastAPI
   - Uvicorn
@@ -23,6 +25,9 @@ URL Santa is a modern, secure URL shortening service with password protection ca
   - Validators
   - QRCode
   - Python-multipart
+  - Passlib (bcrypt)
+  - Motor (async MongoDB driver)
+  - Itsdangerous (session management)
 
 ## Installation
 
@@ -63,28 +68,49 @@ The application will be available at `http://localhost:8000`
 
 ## Usage
 
-1. **Basic URL Shortening**:
-   - Enter a URL in the input field
-   - Click "Check URL" to validate
-   - Click "Shorten URL" to generate a short link
+1. **User Registration/Login**:
+   - Register a new account or log in to existing account
+   - User sessions are maintained for convenience
 
-2. **Password Protection**:
+2. **Basic URL Shortening**:
+   - Enter a URL in the input field
+   - Click "Go" to validate and shorten
+   - Get your shortened URL and QR code
+
+3. **Password Protection**:
    - Enable password protection using the checkbox
    - Set a password for your shortened URL
    - Share the shortened URL with others
    - Recipients will need to enter the password to access the original URL
 
-3. **QR Code**:
-   - After validating a URL, a QR code will be generated
-   - Click "Download QR" to save the QR code
+4. **QR Code**:
+   - After shortening a URL, a QR code will be generated
+   - Click "Download QR" to save the QR code image
 
 ## API Endpoints
 
 - `GET /`: Main application interface
+- `GET /register`: User registration page
+- `POST /register`: Register new user
+- `GET /login`: User login page
+- `POST /login`: Authenticate user
+- `GET /logout`: Logout user
 - `GET /check`: Validate a URL
 - `POST /shorten`: Create a shortened URL
 - `GET /{short_code}`: Redirect to original URL
 - `POST /verify-password/{short_code}`: Verify password for protected URLs
+
+## Deployment
+
+### Vercel Deployment
+
+1. Push your code to GitHub
+2. Connect your repository to Vercel
+3. Set the following environment variables in Vercel:
+   - `MONGODB_URL`: Your MongoDB Atlas connection string
+4. Deploy!
+
+The `vercel.json` file is already configured for FastAPI deployment.
 
 ## Contributing
 
@@ -96,13 +122,14 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Author
 
-Your Name - [@yourusername](https://github.com/yourusername)
+Bhavya - [@yourusername](https://github.com/yourusername)
 
 ## Acknowledgments
 
 - FastAPI for the amazing web framework
 - TailwindCSS for the beautiful UI components
-- QRCode.js for QR code generation
+- Alpine.js for reactive JavaScript
+- MongoDB Atlas for the database service
 
 ## 🤝 Contributing
 

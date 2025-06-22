@@ -11,16 +11,9 @@ URLS_COLLECTION = "urls"
 SESSIONS_COLLECTION = "sessions"
 
 # Initialize MongoDB client with SSL configuration
-client = AsyncIOMotorClient(
-    MONGODB_URL,
-    tlsAllowInvalidCertificates=True,
-    tlsAllowInvalidHostnames=True,
-    serverSelectionTimeoutMS=5000,
-    connectTimeoutMS=10000
-)
+client = AsyncIOMotorClient(MONGODB_URL, tlsAllowInvalidCertificates=True)
 db = client[DATABASE_NAME]
 
 # Collections
-users_collection = db[USERS_COLLECTION]
-urls_collection = db[URLS_COLLECTION]
-sessions_collection = db[SESSIONS_COLLECTION] 
+users_collection = db.get_collection(USERS_COLLECTION)
+urls_collection = db.get_collection(URLS_COLLECTION) 

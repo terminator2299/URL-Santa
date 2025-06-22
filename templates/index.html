@@ -1,259 +1,199 @@
 <!DOCTYPE html>
-<html lang="en" class="transition-colors duration-500">
-
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>URL Santa</title>
-
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-    }
-  </script>
-  <style>
-    @keyframes fadeInUp {
-      0% {
-        opacity: 0;
-        transform: translateY(40px);
-      }
-      100% {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    .animate-fade-in-up {
-      animation: fadeInUp 0.7s ease-out forwards;
-    }
-
-    .spinner {
-      border: 4px solid rgba(0, 0, 0, 0.1);
-      border-radius: 50%;
-      border-top: 4px solid #3498db;
-      width: 24px;
-      height: 24px;
-      animation: spin 1s linear infinite;
-    }
-
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-
-    .hover-scale {
-      transition: transform 0.3s ease;
-    }
-
-    .hover-scale:hover {
-      transform: scale(1.05);
-    }
-
-    .button-group {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 0.5rem;
-    }
-
-    /* Dark mode specific styles */
-    .dark .spinner {
-      border-color: rgba(255, 255, 255, 0.1);
-      border-top-color: #60A5FA;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URL Santa - Simple & Powerful Link Shortener</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <style>
+        body {
+            background-color: #0B1120;
+            color: #F8F9FA;
+        }
+        .hero-bg {
+            background-image: linear-gradient(to bottom, #0B1120, #0c142c);
+        }
+        .btn-primary {
+            background-color: #4A90E2;
+            transition: background-color 0.3s ease;
+        }
+        .btn-primary:hover {
+            background-color: #357ABD;
+        }
+        .form-container {
+            background-color: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .result-card {
+             background-color: #1a2233;
+        }
+        .spinner { border: 2px solid #357ABD; border-top-color: transparent; border-radius: 50%; width: 1.25rem; height: 1.25rem; animation: spin 0.8s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
 </head>
+<body x-data="urlShortener()" class="antialiased">
 
-<body class="bg-gradient-to-r from-pink-200 via-purple-300 to-indigo-400 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 text-gray-800 dark:text-gray-100 transition-colors duration-500 flex flex-col min-h-screen">
-
-    <header class="p-4 flex justify-between items-center">
-        <h1 class="text-3xl font-bold">URL Santa 🎅</h1>
-        <nav class="flex items-center gap-4">
-            {% if user %}
-                <span class="text-lg">Welcome, {{ user.username }}!</span>
-                <a href="/logout" class="px-4 py-2 rounded-lg text-sm font-medium shadow bg-red-500 text-white hover:bg-red-600 transition hover-scale">Logout</a>
-            {% else %}
-                <a href="/login" class="px-4 py-2 rounded-lg text-sm font-medium shadow bg-indigo-500 text-white hover:bg-indigo-600 transition hover-scale">Login</a>
-                <a href="/register" class="px-4 py-2 rounded-lg text-sm font-medium shadow bg-green-500 text-white hover:bg-green-600 transition hover-scale">Register</a>
-            {% endif %}
-            <button id="theme-toggle" class="p-2 rounded-full text-xl shadow bg-gray-500 text-white hover:bg-gray-600 transition hover-scale" aria-label="Toggle theme">
-                🌙
-            </button>
-        </nav>
+    <!-- Header -->
+    <header class="p-4 md:p-6">
+        <div class="container mx-auto flex justify-between items-center">
+            <a href="/" class="text-2xl font-bold text-white">URL Santa 🎅</a>
+            <nav class="hidden md:flex items-center space-x-6">
+                {% if user %}
+                    <span class="text-gray-300">Welcome, {{ user.username }}!</span>
+                    <a href="/logout" class="text-gray-300 hover:text-white">Logout</a>
+                {% else %}
+                    <a href="/register" class="px-4 py-2 rounded-md text-white btn-primary">Get Started</a>
+                {% endif %}
+            </nav>
+            <div class="md:hidden"></div>
+        </div>
     </header>
 
-    <main class="flex-grow flex items-center justify-center p-4">
-        <div class="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-2xl space-y-6 transition-colors duration-500 w-full max-w-lg">
-            <form id="url-form" class="space-y-4" autocomplete="off">
-                <label for="url" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Enter URL:</label>
-                <input type="text" id="url" name="url" placeholder="https://example.com" class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:focus:ring-indigo-400 transition" required />
-
-                <div class="flex items-center space-x-2">
-                  <input type="checkbox" id="enable-password" class="rounded text-indigo-500 focus:ring-indigo-400">
-                  <label for="enable-password" class="text-sm font-medium text-gray-700 dark:text-gray-300">Enable password protection</label>
-                </div>
-
-                <div id="password-field" class="hidden">
-                  <label for="password" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Password (optional):</label>
-                  <input type="password" id="password" name="password" placeholder="Leave blank for no password" class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:focus:ring-indigo-400 transition" autocomplete="new-password" />
-                </div>
-
-                <button type="submit"
-                  class="w-full py-3 bg-indigo-500 text-white rounded-xl font-semibold hover:bg-indigo-600 transition duration-200 shadow-md hover:shadow-lg hover-scale">
-                    🚀 Check URL
-                </button>
-            </form>
-
-            <div id="result" class="mt-6 text-center text-lg font-medium text-gray-800 dark:text-gray-200"></div>
-
-            <div id="qr-container" class="mt-6 flex justify-center hidden">
-              <canvas id="qr-code" class="bg-white p-2 rounded-lg"></canvas>
+    <main class="container mx-auto px-4 py-8 text-center">
+        <!-- Hero Section -->
+        <section class="hero-bg py-12 rounded-lg">
+            <h1 class="text-4xl md:text-6xl font-extrabold text-white leading-tight">Shorten, Share, and Track</h1>
+            <p class="mt-4 text-lg md:text-xl text-gray-300 max-w-2xl mx-auto">Your go-to tool for creating clean, shareable links. Fast, free, and easy to use.</p>
+            <div class="mt-8">
+                <a href="#shorten-form" @click.prevent="document.getElementById('shorten-form').scrollIntoView({ behavior: 'smooth' })" class="inline-block px-8 py-4 rounded-lg text-white font-semibold btn-primary text-lg">Shorten Now</a>
             </div>
+        </section>
 
-            <div id="action-buttons" class="mt-6 space-y-4 hidden">
-              <div class="button-group">
-                <button id="shorten-btn"
-                  class="py-3 px-4 bg-blue-500 dark:bg-blue-600 text-white rounded-xl hover:bg-blue-600 dark:hover:bg-blue-700 transition hover-scale flex items-center justify-center gap-2">
-                  <span>🔗</span>
-                  <span>Shorten URL</span>
-                </button>
-                <button id="download-btn"
-                  class="py-3 px-4 bg-green-500 dark:bg-green-600 text-white rounded-xl hover:bg-green-600 dark:hover:bg-green-700 transition hover-scale flex items-center justify-center gap-2">
-                  <span>⬇️</span>
-                  <span>Download QR</span>
-                </button>
-              </div>
+        <!-- Shortener Form Section -->
+        <section id="shorten-form" class="mt-12 scroll-mt-20">
+            <div class="max-w-3xl mx-auto p-8 rounded-2xl form-container">
+                <form @submit.prevent="validateUrl" class="space-y-4">
+                    <h2 class="text-2xl font-bold text-white mb-6">Enter your long URL</h2>
+                    <div class="flex flex-col sm:flex-row gap-4">
+                        <input type="url" x-model="longUrl" placeholder="https://example.com/very/long/url" required class="flex-grow p-4 rounded-lg bg-gray-800 text-white border border-gray-600 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        <button type="submit" :disabled="loading" class="px-6 py-4 rounded-lg text-white font-semibold btn-primary flex items-center justify-center">
+                            <span x-show="!loading">Go</span>
+                            <div x-show="loading" class="spinner"></div>
+                        </button>
+                    </div>
+                    <div class="flex items-center justify-center pt-2">
+                        <input type="checkbox" id="password-toggle" x-model="usePassword" class="h-4 w-4 rounded text-blue-500 focus:ring-blue-500 border-gray-600 bg-gray-700">
+                        <label for="password-toggle" class="ml-2 text-gray-300">Add Password</label>
+                    </div>
+                    <div x-show="usePassword" x-transition class="pt-2">
+                        <input type="password" x-model="password" placeholder="Enter password" class="w-full max-w-xs mx-auto p-3 rounded-lg bg-gray-800 text-white border border-gray-600 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    </div>
+                    <p x-show="error" x-text="error" class="text-red-400 mt-4"></p>
+                </form>
             </div>
-        </div>
+        </section>
+
+        <!-- Result Section -->
+        <template x-if="shortUrl">
+            <section id="result" class="mt-12">
+                 <div class="max-w-3xl mx-auto p-8 rounded-2xl result-card">
+                    <h2 class="text-2xl font-bold text-white mb-6">Your Short Link is Ready!</h2>
+                    <div class="flex flex-col md:flex-row items-center justify-center md:justify-between gap-6">
+                        <div class="text-center md:text-left">
+                            <p class="text-gray-400">Short URL:</p>
+                            <a :href="shortUrl" x-text="shortUrl" target="_blank" class="text-blue-400 text-xl hover:underline break-all"></a>
+                            <button @click="copyToClipboard(shortUrl)" class="mt-4 px-4 py-2 text-sm rounded-md bg-gray-700 hover:bg-gray-600 text-white transition" x-text="copyButtonText"></button>
+                        </div>
+                        <div class="mt-6 md:mt-0">
+                            <p class="text-gray-400 mb-2">QR Code:</p>
+                            <div class="flex flex-col items-center gap-3">
+                                <img :src="qrCode" alt="QR Code" class="w-40 h-40 rounded-lg bg-white p-2">
+                                <button @click="downloadQR()" class="px-4 py-2 text-sm rounded-md bg-green-600 hover:bg-green-700 text-white transition flex items-center gap-2">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                    </svg>
+                                    Download QR
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </template>
     </main>
+    
+    <footer class="text-center py-8 mt-16 text-gray-500">
+        <p>&copy; 2024 URL Santa. All rights reserved.</p>
+    </footer>
 
-  <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+    <script>
+        function urlShortener() {
+            return {
+                longUrl: '',
+                usePassword: false,
+                password: '',
+                loading: false,
+                error: '',
+                shortUrl: null,
+                qrCode: null,
+                copyButtonText: 'Copy Link',
+                
+                async validateUrl() {
+                    this.error = '';
+                    if (!this.longUrl) {
+                        this.error = 'Please enter a URL.';
+                        return;
+                    }
+                    
+                    this.loading = true;
+                    try {
+                        const response = await fetch(`/check?url=${encodeURIComponent(this.longUrl)}`);
+                        const data = await response.json();
+                        if (data.valid) {
+                            await this.createShortUrl();
+                        } else {
+                            this.error = 'The URL you entered is not valid.';
+                        }
+                    } catch (e) {
+                        this.error = 'Could not validate URL. Please try again.';
+                    } finally {
+                        this.loading = false;
+                    }
+                },
+                
+                async createShortUrl() {
+                    try {
+                        const response = await fetch('/shorten', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                url: this.longUrl,
+                                password: this.usePassword ? this.password : null
+                            })
+                        });
+                        if (!response.ok) throw new Error('Failed to shorten URL.');
+                        const data = await response.json();
+                        this.shortUrl = data.short_url;
+                        this.qrCode = data.qr_code_b64;
+                    } catch (e) {
+                        this.error = e.message;
+                    }
+                },
 
-  <script>
-    // Function to reset the form and UI
-    function resetForm() {
-      document.getElementById('url-form').reset();
-      document.getElementById('result').textContent = '';
-      document.getElementById('qr-container').classList.add('hidden');
-      document.getElementById('action-buttons').classList.add('hidden');
-    }
+                copyToClipboard(text) {
+                    navigator.clipboard.writeText(text).then(() => {
+                        this.copyButtonText = 'Copied!';
+                        setTimeout(() => { this.copyButtonText = 'Copy Link'; }, 2000);
+                    });
+                },
 
-    // Reset form when page is loaded or refreshed
-    window.addEventListener('load', resetForm);
-
-    // Theme toggle logic
-    const themeToggle = document.getElementById('theme-toggle');
-    const html = document.documentElement;
-
-    function setTheme(mode) {
-      if (mode === 'dark') {
-        html.classList.add('dark');
-        themeToggle.textContent = '☀️';
-        localStorage.setItem('theme', 'dark');
-      } else {
-        html.classList.remove('dark');
-        themeToggle.textContent = '🌙';
-        localStorage.setItem('theme', 'light');
-      }
-    }
-
-    // Load saved theme
-    const savedTheme = localStorage.getItem('theme');
-
-    if (savedTheme === 'dark') {
-      setTheme('dark');
-    } else {
-      setTheme('light'); // default to light theme always on first visit
-    }
-
-    // Toggle on click
-    themeToggle.addEventListener('click', () => {
-      const isDark = html.classList.contains('dark');
-      setTheme(isDark ? 'light' : 'dark');
-    });
-
-    // URL checking logic
-    const form = document.getElementById('url-form');
-    const urlInput = document.getElementById('url');
-    const resultDiv = document.getElementById('result');
-    const qrContainer = document.getElementById('qr-container');
-    const qrCanvas = document.getElementById('qr-code');
-    const actionButtons = document.getElementById('action-buttons');
-    const downloadBtn = document.getElementById('download-btn');
-    const shortenBtn = document.getElementById('shorten-btn');
-
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const url = urlInput.value.trim();
-      resultDiv.textContent = '⏳ Checking...';
-      qrContainer.classList.add('hidden');
-      actionButtons.classList.add('hidden');
-
-      try {
-        const response = await fetch(`/check?url=${encodeURIComponent(url)}`);
-        if (!response.ok) throw new Error('Network error');
-        const data = await response.json();
-
-        if (data.valid) {
-          resultDiv.textContent = '✅ URL is valid and safe!';
-          qrContainer.classList.remove('hidden');
-          actionButtons.classList.remove('hidden');
-          QRCode.toCanvas(qrCanvas, url, { 
-            width: 180,
-            color: {
-              dark: html.classList.contains('dark') ? '#ffffff' : '#000000',
-              light: html.classList.contains('dark') ? '#1f2937' : '#ffffff'
+                downloadQR() {
+                    if (!this.qrCode) return;
+                    
+                    // Create a temporary link element
+                    const link = document.createElement('a');
+                    link.download = 'qr-code.png';
+                    link.href = this.qrCode;
+                    
+                    // Trigger the download
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                }
             }
-          });
-        } else {
-          resultDiv.textContent = '❌ Invalid URL. Please enter a correct one.';
         }
-      } catch (err) {
-        resultDiv.textContent = '⚠️ Error checking URL. Please try again.';
-        console.error(err);
-      }
-    });
-
-    downloadBtn.addEventListener('click', () => {
-      const link = document.createElement('a');
-      link.download = 'url-qr-code.png';
-      link.href = qrCanvas.toDataURL('image/png');
-      link.click();
-    });
-
-    shortenBtn.addEventListener('click', async () => {
-      const url = urlInput.value.trim();
-      const password = document.getElementById('password').value;
-      try {
-        const response = await fetch('/shorten', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            url: url,
-            password: password || null
-          })
-        });
-        if (!response.ok) throw new Error('Network error');
-        const data = await response.json();
-        resultDiv.textContent = `🔗 Shortened URL: ${data.shortenedUrl}`;
-      } catch (err) {
-        resultDiv.textContent = '⚠️ Error shortening URL. Please try again.';
-        console.error(err);
-      }
-    });
-
-    // Password field toggle
-    document.getElementById('enable-password').addEventListener('change', function() {
-      const passwordField = document.getElementById('password-field');
-      if (this.checked) {
-        passwordField.classList.remove('hidden');
-      } else {
-        passwordField.classList.add('hidden');
-      }
-    });
-  </script>
+    </script>
 </body>
-
 </html>
