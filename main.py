@@ -5,6 +5,7 @@ from fastapi.templating import Jinja2Templates
 import validators
 import os
 import secrets
+import logging
 from typing import Optional
 from pydantic import BaseModel
 from passlib.context import CryptContext
@@ -13,6 +14,10 @@ from config import users_collection, urls_collection
 from utils import generate_short_code, generate_qr_code
 
 app = FastAPI()
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Add session middleware
 # In a production environment, this secret key should be loaded from a secure source.
@@ -45,10 +50,20 @@ async def read_root(request: Request):
     # Initially, short_url and qr_code_b64 are None.
     return templates.TemplateResponse("index.html", {"request": request, "user": user, "short_url": None, "qr_code_b64": None})
 
+@app.get("/health", response_class=JSONResponse)
+async def health_check():
+    return {"status": "healthy", "message": "URL Santa is running"}
+
 @app.get("/check", response_class=JSONResponse)
-async def check_url(url: str):
-    is_valid = validators.url(url)
-    return {"valid": is_valid}
+async def check_url(url: str = Query(...)):
+    try:
+        logger.info(f"Checking URL: {url}")
+        is_valid = validators.url(url)
+        logger.info(f"URL validation result: {is_valid}")
+        return {"valid": is_valid}
+    except Exception as e:
+        logger.error(f"Error checking URL {url}: {str(e)}")
+        return {"valid": False, "error": str(e)}
 
 @app.get("/favicon.ico", include_in_schema=False)
 async def favicon():
