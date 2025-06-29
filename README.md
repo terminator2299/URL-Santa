@@ -2,6 +2,8 @@
 
 URL Santa is a modern, secure URL shortening service with password protection capabilities. Built with FastAPI and featuring a beautiful, responsive dark-themed UI.
 
+**Currently working⚡️**
+
 ## Features
 
 - 🔗 URL shortening with custom short codes
